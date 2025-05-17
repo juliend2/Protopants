@@ -9,12 +9,12 @@ class Prototype {
     $this->methods = $methods;
   }
 
-  public function setInitialParams($properties) {
-    $this->properties = array_merge($this->properties, $properties);
+  public function setMethods($methods) {
+    $this->methods = array_merge($this->methods, $methods);
   }
 
-  public function setMethod($methodName, callable $methodBody) {
-    $this->methods[$methodName] = $methodBody;
+  public function setInitialParams($properties) {
+    $this->properties = array_merge($this->properties, $properties);
   }
 
   public function __call($methodName, $arguments) {
@@ -29,12 +29,25 @@ class Prototype {
 
 }
 
-$Human = new Prototype(
+$__prototypesRegistry = [];
+
+function prototype(string $prototypeName, array $properties, array $methods) {
+  global $__prototypesRegistry;
+  $__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
+  return $__prototypesRegistry[$prototypeName];
+}
+
+function setMethod(string $prototypeName, string $methodName, callable $methodBody) {
+  global $__prototypesRegistry;
+  $prototype = $__prototypesRegistry[$prototypeName];
+  $prototype->setMethods([$methodName => $methodBody]);
+}
+
+prototype('Human',
   properties: [
     'nom' => '',
     'age' => 0,
   ],
-  // default methods:
   methods: [
     'parler' => function ($self) {
       $str = "Mon nom est {$self->nom} et j'ai {$self->age} ans.";
@@ -43,25 +56,31 @@ $Human = new Prototype(
   ]
 );
 
-assert(get_class($Human) === 'Prototype');
+//assert(get_class($Human) === 'Prototype');
 
 
-function create(Prototype $prototype, array $initialParams = []) {
-  $object = clone $prototype;
+function create(string $prototypeName, array $initialParams = []) {
+  global $__prototypesRegistry;
+  $object = clone $__prototypesRegistry[$prototypeName];
   $object->setInitialParams($initialParams);
   return $object;
 }
 
-$julien = create($Human, ['nom'=>'Julien', 'age' => 39]);
+$julien = create('Human', ['nom'=>'Julien', 'age' => 39]);
 assert($julien->parler() === "Mon nom est Julien et j'ai 39 ans.");
 
-$Human->setMethod('parler', function ($self) {
+setMethod('Human', 'parler', function ($self) {
   return "My name is {$self->nom} and I'm {$self->age} years old.";
 });
 
-$nathalie = create($Human, ['nom'=>'Nat', 'age' => 29]);
-assert($nathalie->parler() === "My name is Nat and I'm 29 years old."); // has the new parler() implementation
-assert($julien->parler() === "Mon nom est Julien et j'ai 39 ans."); // still has the old parler() method implementation
+function oui() {
+  global $julien;
+  $nathalie = create('Human', ['nom'=>'Nat', 'age' => 29]);
+  assert($nathalie->parler() === "My name is Nat and I'm 29 years old."); // has the new parler() implementation
+  assert($julien->parler() === "Mon nom est Julien et j'ai 39 ans."); // still has the old parler() method implementation
+}
+oui();
+
 
 
 
