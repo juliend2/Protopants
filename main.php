@@ -10,13 +10,13 @@ class Prototype {
     protected $properties = [];
     protected $methods = [];
 
-  public static function get($prototypeName): static|null {
-    // global $__prototypesRegistry;
-    if (isset(static::$__prototypesRegistry[$prototypeName])) {
-      return static::$__prototypesRegistry[$prototypeName];
+    public static function get($prototypeName): static|null {
+        // global $__prototypesRegistry;
+        if (isset(static::$__prototypesRegistry[$prototypeName])) {
+            return static::$__prototypesRegistry[$prototypeName];
+        }
+        return null;
     }
-    return null;
-  }
 
     public static function create($prototypeName, array $properties, array $methods) {
         static::$__prototypesRegistry[$prototypeName] = static::extendPrototype('Object', $prototypeName, $properties, $methods);
@@ -48,62 +48,62 @@ class Prototype {
         $this->methods = array_merge($this->methods, $methods);
     }
 
-  public static function extendPrototype(string $parentPrototypeName, string $prototypeName, array $properties, array $methods) {
-    $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
-    static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
-    static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
-    static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
-    return static::$__prototypesRegistry[$prototypeName];
-  }
-
-  public function setParentPrototype(Prototype|null $parentPrototype) {
-    $this->parentPrototype = $parentPrototype;
-  }
-
-  public function setSingleMethod($method) {
-    $this->methods = array_merge($this->methods, $method);
-  }
-
-  public function setProperties($properties) {
-    $this->properties = array_merge($this->properties, $properties);
-  }
-
-  public function setMethods($methods) {
-    $this->methods = array_merge($this->methods, $methods);
-  }
-
-  public function setInitialParams($properties) {
-    $this->properties = array_merge($this->properties, $properties);
-  }
-
-  public function __call($methodName, $arguments) {
-    if ($methodName === 'methodMissing' && isset($this->methods[$arguments[0]])) {
-        $foundMethodName = array_shift($arguments);
-        return $this->methods[$foundMethodName]($this, ...$arguments);
+    public static function extendPrototype(string $parentPrototypeName, string $prototypeName, array $properties, array $methods) {
+        $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
+        static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
+        static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
+        static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
+        return static::$__prototypesRegistry[$prototypeName];
     }
 
-    if (isset($this->methods[$methodName])) {
-      return $this->methods[$methodName]($this, ...$arguments);
+    public function setParentPrototype(Prototype|null $parentPrototype) {
+        $this->parentPrototype = $parentPrototype;
     }
 
-    if (isset($this->methods['methodMissing'])) {
-      return $this->methods['methodMissing']($this, $methodName, $arguments);
+    public function setSingleMethod($method) {
+        $this->methods = array_merge($this->methods, $method);
     }
 
-    return $this->parentPrototype->methodMissing($methodName, $arguments);
-  }
+    public function setProperties($properties) {
+        $this->properties = array_merge($this->properties, $properties);
+    }
 
-  public function __get($propertyName) {
-    return $this->properties[$propertyName] ?? null;
-  }
+    public function setMethods($methods) {
+        $this->methods = array_merge($this->methods, $methods);
+    }
+
+    public function setInitialParams($properties) {
+        $this->properties = array_merge($this->properties, $properties);
+    }
+
+    public function __call($methodName, $arguments) {
+        if ($methodName === 'methodMissing' && isset($this->methods[$arguments[0]])) {
+            $foundMethodName = array_shift($arguments);
+            return $this->methods[$foundMethodName]($this, ...$arguments);
+        }
+
+        if (isset($this->methods[$methodName])) {
+            return $this->methods[$methodName]($this, ...$arguments);
+        }
+
+        if (isset($this->methods['methodMissing'])) {
+            return $this->methods['methodMissing']($this, $methodName, $arguments);
+        }
+
+        return $this->parentPrototype->methodMissing($methodName, $arguments);
+    }
+
+    public function __get($propertyName) {
+        return $this->properties[$propertyName] ?? null;
+    }
 }
 
 class SubPrototype extends Prototype {
-  public function __construct($properties, $methods) {
-    $this->properties = $properties;
-    // the difference is that we don't want to override the base methodMissing
-    $this->methods = array_merge($this->methods, $methods);
-  }
+    public function __construct($properties, $methods) {
+        $this->properties = $properties;
+        // the difference is that we don't want to override the base methodMissing
+        $this->methods = array_merge($this->methods, $methods);
+    }
 }
 
 Prototype::create('Object',
