@@ -1,12 +1,30 @@
 <?php
 
+class PrototypeMethodMissingException extends Exception { }
+
 class Prototype {
+  protected $parentPrototype = null;
   protected $properties = [];
   protected $methods = [];
 
+  public static function create() {
+    // TODO
+  }
+
   public function __construct($properties, $methods) {
     $this->properties = $properties;
-    $this->methods = $methods;
+    $this->methods['methodMissing'] = function ($self, $methodName, $arguments) {
+      throw new PrototypeMethodMissingException("Method Missing: ".$methodName);
+    };
+    $this->methods = array_merge($this->methods, $methods);
+  }
+
+  public function setParentPrototype(Prototype $parentPrototype) {
+    $this->parentPrototype = $parentPrototype;
+  }
+
+  public function setSingleMethod($method) {
+    $this->methods = array_merge($this->methods, $method);
   }
 
   public function setMethods($methods) {
@@ -21,12 +39,24 @@ class Prototype {
     if (isset($this->methods[$methodName])) {
       return $this->methods[$methodName]($this, ...$arguments);
     }
+
+    if (isset($this->parentPrototype->methods[$methodName])) {
+      return $this->parentPrototype->methods[$methodName]($this, ...$arguments);
+    }
+    
+    return $this->methodMissing($methodName, $arguments);
   }
 
   public function __get($propertyName) {
     return $this->properties[$propertyName] ?? null;
   }
+}
 
+class SubPrototype extends Prototype {
+  public function __construct($properties, $methods) {
+    $this->properties = $properties;
+    $this->methods = array_merge($this->methods, $methods);
+  }
 }
 
 $__prototypesRegistry = [];
@@ -40,10 +70,21 @@ function prototype(string $prototypeName, array $properties, array $methods) {
 function setMethod(string $prototypeName, string $methodName, callable $methodBody) {
   global $__prototypesRegistry;
   $prototype = $__prototypesRegistry[$prototypeName];
-  $prototype->setMethods([$methodName => $methodBody]);
+  // $prototype->setMethods([$methodName => $methodBody]);
+  $prototype->setSingleMethod([$methodName => $methodBody]);
 }
 
-prototype('Human',
+function create(string $prototypeName, array $initialParams = []) {
+  // TODO: use Prototype::get($prototypeName) instead
+  global $__prototypesRegistry;
+  $cloned = new SubPrototype($initialParams ?? [], []);
+  $cloned->setParentPrototype($__prototypesRegistry[$prototypeName]);
+  $cloned->setInitialParams($initialParams);
+  return $cloned;
+}
+
+
+$humainProto = prototype('Human',
   properties: [
     'nom' => '',
     'age' => 0,
@@ -56,18 +97,11 @@ prototype('Human',
   ]
 );
 
-//assert(get_class($Human) === 'Prototype');
-
-
-function create(string $prototypeName, array $initialParams = []) {
-  global $__prototypesRegistry;
-  $object = clone $__prototypesRegistry[$prototypeName];
-  $object->setInitialParams($initialParams);
-  return $object;
-}
+assert(get_class($humainProto) === 'Prototype');
 
 $julien = create('Human', ['nom'=>'Julien', 'age' => 39]);
 assert($julien->parler() === "Mon nom est Julien et j'ai 39 ans.");
+
 
 setMethod('Human', 'parler', function ($self) {
   return "My name is {$self->nom} and I'm {$self->age} years old.";
@@ -76,11 +110,32 @@ setMethod('Human', 'parler', function ($self) {
 function oui() {
   global $julien;
   $nathalie = create('Human', ['nom'=>'Nat', 'age' => 29]);
+  echo $nathalie->parler() . "\n";
   assert($nathalie->parler() === "My name is Nat and I'm 29 years old."); // has the new parler() implementation
-  assert($julien->parler() === "Mon nom est Julien et j'ai 39 ans."); // still has the old parler() method implementation
+  echo $julien->parler() . "\n";
+  assert($julien->parler() === "My name is Julien and I'm 39 years old."); // still has the old parler() method implementation
 }
 oui();
 
+$coughtException = false;
+try {
+  $julien->jaser();
+} catch (PrototypeMethodMissingException $e) {
+  $coughtException = true;
+}
+assert($coughtException);
+
+setMethod('Human', 'methodMissing', function ($self, $methodName) {
+  echo "Purée! C'est platte mais $methodName est pas implémenté.\n";
+});
+
+$hadNoException = true;
+try {
+  $julien->jaser();
+} catch (PrototypeMethodMissingException $e) {
+  $hadNoException = false;
+}
+assert($hadNoException);
 
 
 
