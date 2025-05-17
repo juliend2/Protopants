@@ -121,6 +121,7 @@ $coughtException = false;
 try {
   $julien->jaser();
 } catch (PrototypeMethodMissingException $e) {
+  // SHOULD go there since the parent prototype's methodMissing throws an Exception
   $coughtException = true;
 }
 assert($coughtException);
@@ -133,6 +134,7 @@ $hadNoException = true;
 try {
   $julien->jaser();
 } catch (PrototypeMethodMissingException $e) {
+  // Should not go there, since it will execute its own methodMissing method.
   $hadNoException = false;
 }
 assert($hadNoException);
