@@ -2,10 +2,20 @@
 
 class PrototypeMethodMissingException extends Exception { }
 
+$__prototypesRegistry = [];
+
 class Prototype {
   protected $parentPrototype = null;
   protected $properties = [];
   protected $methods = [];
+
+  public static function get($prototypeName): static|null {
+    global $__prototypesRegistry;
+    if (isset($__prototypesRegistry[$prototypeName])) {
+      return $__prototypesRegistry[$prototypeName];
+    }
+    return null;
+  }
 
   public static function create() {
     // TODO
@@ -19,12 +29,16 @@ class Prototype {
     $this->methods = array_merge($this->methods, $methods);
   }
 
-  public function setParentPrototype(Prototype $parentPrototype) {
+  public function setParentPrototype(Prototype|null $parentPrototype) {
     $this->parentPrototype = $parentPrototype;
   }
 
   public function setSingleMethod($method) {
     $this->methods = array_merge($this->methods, $method);
+  }
+
+  public function setProperties($properties) {
+    $this->properties = array_merge($this->properties, $properties);
   }
 
   public function setMethods($methods) {
@@ -59,11 +73,30 @@ class SubPrototype extends Prototype {
   }
 }
 
-$__prototypesRegistry = [];
+prototype('Object',
+  properties: [
+  ],
+  methods: [
+    'toString' => function ($self) {
+      // $str = "Mon nom est {$self->nom} et j'ai {$self->age} ans.";
+      // return $str;
+      // TODO: get the name of that object's prototype
+      return "TODO";
+    }
+  ]
+);
 
 function prototype(string $prototypeName, array $properties, array $methods) {
   global $__prototypesRegistry;
+  $__prototypesRegistry[$prototypeName] = extendPrototype('Object', $prototypeName, $properties, $methods);
   $__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
+  return $__prototypesRegistry[$prototypeName];
+}
+
+function extendPrototype(string $parentPrototypeName, string $prototypeName, array $properties, array $methods) {
+  $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
+  $__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
+  $__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
   return $__prototypesRegistry[$prototypeName];
 }
 
@@ -82,7 +115,6 @@ function create(string $prototypeName, array $initialParams = []) {
   $cloned->setInitialParams($initialParams);
   return $cloned;
 }
-
 
 $humainProto = prototype('Human',
   properties: [
@@ -134,7 +166,7 @@ $hadNoException = true;
 try {
   $julien->jaser();
 } catch (PrototypeMethodMissingException $e) {
-  // Should not go there, since it will execute its own methodMissing method.
+  // Should not go there, since it will execute its own methodMissing method which doesn't throw an Exception.
   $hadNoException = false;
 }
 assert($hadNoException);
