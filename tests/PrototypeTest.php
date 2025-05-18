@@ -24,13 +24,13 @@ class PrototypeTest extends TestCase {
 
     function testCallingParentMethod() {
         $prototype = Prototype::create('Bob', [], methods: []);
-        $this->assertEquals('TODO', $prototype->toString());
+        $this->assertEquals('[Object]', $prototype->toString());
     }
 
     function testCallingParentOfParentMethod() {
         Prototype::create('Bob', [], methods: []);
         $prototype = Prototype::extendPrototype('Bob', 'Bobby', [], []);
-        $this->assertEquals('TODO', $prototype->toString());
+        $this->assertEquals('[Object]', $prototype->toString());
     }
 
     function testPrototypeMethodMissing() {

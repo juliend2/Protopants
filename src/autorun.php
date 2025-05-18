@@ -8,7 +8,7 @@ Prototype::create('Object',
             // $str = "Mon nom est {$self->nom} et j'ai {$self->age} ans.";
             // return $str;
             // TODO: get the name of that object's prototype
-            return "TODO";
+            return "[{$self->__prototypeName}]";
         }
     ]
 );
