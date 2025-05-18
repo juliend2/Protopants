@@ -18,7 +18,18 @@ class Prototype {
     }
 
     public static function create($prototypeName, array $properties, array $methods) {
-        static::$__prototypesRegistry[$prototypeName] = static::extendPrototype('Object', $prototypeName, $properties, $methods);
+        $parentPrototypeName = $prototypeName === 'Object' ? null : 'Object';
+        // $parent = Prototype::get($parentPrototypeName);
+        static::$__prototypesRegistry[$prototypeName] = static::extend($parentPrototypeName, $prototypeName, $properties, $methods);
+        // static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parent);
+        return static::$__prototypesRegistry[$prototypeName];
+    }
+
+    public static function extend(string|null $parentPrototypeName, string $prototypeName, array $properties, array $methods) {
+        $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
+        static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
+        static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
+        static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
         return static::$__prototypesRegistry[$prototypeName];
     }
 
@@ -39,14 +50,6 @@ class Prototype {
             throw new PrototypeMethodMissingException("Method Missing: ".$methodName);
         };
         $this->methods = array_merge($this->methods, $methods);
-    }
-
-    public static function extendPrototype(string $parentPrototypeName, string $prototypeName, array $properties, array $methods) {
-        $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
-        static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
-        static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
-        static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
-        return static::$__prototypesRegistry[$prototypeName];
     }
 
     public function setParentPrototype(Prototype|null $parentPrototype) {
@@ -87,6 +90,19 @@ class Prototype {
     }
 
     public function __get($propertyName) {
-        return $this->properties[$propertyName] ?? null;
+
+        if (isset($this->properties[$propertyName])) {
+            return $this->properties[$propertyName];
+        }
+
+        // this has no prop of that name...
+
+        if (is_null($this->parentPrototype)) {
+            return null;
+        }
+        // this has no prop of that name, nor does it have a null parent...
+
+        // So maybe its parent has the property? (recursion happens)
+        return $this->parentPrototype->{$propertyName};
     }
 }

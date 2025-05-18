@@ -1,8 +1,8 @@
 <?php
 
 require __DIR__.'/../vendor/autoload.php';
-require_once __DIR__.'/../main.php';
 require_once __DIR__.'/../src/PrototypeMethodMissingException.php';
+require_once __DIR__.'/../main.php';
 
 use PHPUnit\Framework\TestCase;
 
@@ -29,7 +29,7 @@ class PrototypeTest extends TestCase {
 
     function testCallingParentOfParentMethod() {
         Prototype::create('Bob', [], methods: []);
-        $prototype = Prototype::extendPrototype('Bob', 'Bobby', [], []);
+        $prototype = Prototype::extend('Bob', 'Bobby', [], []);
         $this->assertEquals('[Object]', $prototype->toString());
     }
 
@@ -39,4 +39,36 @@ class PrototypeTest extends TestCase {
         $prototype->talkToMe();
     }
 
+    function testAccessingFirstLevelPropertyFromMethod() {
+        $prototype = Prototype::create('Friend',
+            properties: [
+                'name' => 'Benny',
+            ], methods: [
+                'getName' => function ($self) {
+                    return "Hello, this is {$self->name}.";
+                }
+            ]
+        );
+        $this->assertEquals("Hello, this is Benny.", $prototype->getName());
+    }
+
+    function testAccessingParentPropertyFromFirstLevelMethod() {
+        Prototype::create('Person',
+            properties: [
+                'name' => 'Ben',
+            ],
+            methods: [
+            ]
+        );
+        $benny = Prototype::extend('Person', 'Friend',
+            properties: [
+                'nickname' => 'Benny',
+            ], methods: [
+                'getName' => function ($self) {
+                    return "Hello, this is {$self->name}.";
+                }
+            ]
+        );
+        $this->assertEquals("Hello, this is Ben.", $benny->getName());
+    }
 }

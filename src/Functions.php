@@ -13,16 +13,16 @@ function create(string $prototypeName, array $initialParams = []) {
   return $cloned;
 }
 
-$humainProto = Prototype::create('Human',
-  properties: [
-    'nom' => '',
-    'age' => 0,
-  ],
-  methods: [
-    'parler' => function ($self) {
-      // $str = "Mon nom est {$self->nom} et j'ai {$self->age} ans.";
-      $str = "Bonjour.";
-      return $str;
-    }
-  ]
-);
+// $humainProto = Prototype::create('Human',
+//   properties: [
+//     'nom' => '',
+//     'age' => 0,
+//   ],
+//   methods: [
+//     'parler' => function ($self) {
+//       // $str = "Mon nom est {$self->nom} et j'ai {$self->age} ans.";
+//       $str = "Bonjour.";
+//       return $str;
+//     }
+//   ]
+// );
