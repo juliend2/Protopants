@@ -28,13 +28,13 @@ class PrototypeTest extends TestCase {
 
     function testCallingParentMethod() {
         $prototype = Prototype::create('Bob', [], methods: []);
-        $this->assertEquals('[Object]', $prototype->toString());
+        $this->assertEquals('[Bob]', $prototype->toString());
     }
 
     function testCallingParentOfParentMethod() {
         Prototype::create('Bob', [], methods: []);
         $prototype = Prototype::extend('Bobby', 'Bob', [], []);
-        $this->assertEquals('[Object]', $prototype->toString());
+        $this->assertEquals('[Bobby]', $prototype->toString());
     }
 
     function testAccessingFirstLevelPropertyFromMethod() {
@@ -48,6 +48,20 @@ class PrototypeTest extends TestCase {
             ]
         );
         $this->assertEquals("Hello, this is Benny.", $prototype->getName());
+    }
+
+    function testAccessingOverriddenParentPropertyFromMethod() {
+        Prototype::create('Friend',
+            properties: [
+                'name' => null,
+            ], methods: [
+                'getName' => function ($self) {
+                    return "Hello, this is {$self->name}.";
+                }
+            ]
+        );
+        $friend = create('Friend', ['name' => 'Bobby']);
+        $this->assertEquals("Hello, this is Bobby.", $friend->getName());
     }
 
     function testAccessingParentPropertyFromFirstLevelMethod() {
@@ -68,5 +82,20 @@ class PrototypeTest extends TestCase {
             ]
         );
         $this->assertEquals("Hello, this is Ben.", $benny->getName());
+    }
+
+    function testGetParentMethod() {
+        Prototype::create('VeryParent',
+            methods: [
+                'methode' => function ($self) {/* */}
+            ]
+        );
+        Prototype::extend('Parent', 'VeryParent',
+        );
+        Prototype::extend('Child', 'Parent');
+
+        $child = create('Child');
+        $method = $child->getParentMethod('methode');
+        $this->assertIsCallable($method);
     }
 }

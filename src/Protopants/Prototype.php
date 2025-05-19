@@ -17,13 +17,13 @@ class Prototype {
         return null;
     }
 
-    public static function create($prototypeName, array $properties, array $methods) {
+    public static function create($prototypeName, array $properties = [], array $methods = []) {
         $parentPrototypeName = $prototypeName === 'Object' ? null : 'Object';
         static::$__prototypesRegistry[$prototypeName] = static::extend($prototypeName, $parentPrototypeName, $properties, $methods);
         return static::$__prototypesRegistry[$prototypeName];
     }
 
-    public static function extend(string $prototypeName, string|null $parentPrototypeName, array $properties, array $methods) {
+    public static function extend(string $prototypeName, string|null $parentPrototypeName, array $properties = [], array $methods = []) {
         $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
         static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
         static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
@@ -71,20 +71,23 @@ class Prototype {
     }
 
     public function __call($methodName, $arguments) {
-        if ($methodName === 'methodMissing' && isset($this->methods[$arguments[0]])) {
-            $foundMethodName = array_shift($arguments);
-            return $this->methods[$foundMethodName]($this, ...$arguments);
+        $method = $this->getParentMethod($methodName);
+        if (is_null($method)) {
+            $methodMissingMethod = $this->getParentMethod('methodMissing');
+            return $methodMissingMethod($this, $methodName, $arguments);
         }
 
+        return $method($this, ...$arguments);
+    }
+
+    /**
+     * (Recursive)
+     */
+    public function getParentMethod($methodName): Callable|null {
         if (isset($this->methods[$methodName])) {
-            return $this->methods[$methodName]($this, ...$arguments);
+            return $this->methods[$methodName];
         }
-
-        if (isset($this->methods['methodMissing'])) {
-            return $this->methods['methodMissing']($this, $methodName, $arguments);
-        }
-
-        return $this->parentPrototype->methodMissing($methodName, $arguments);
+        return $this->parentPrototype?->getParentMethod($methodName);
     }
 
     public function __get($propertyName) {
@@ -110,7 +113,8 @@ Prototype::create('Object',
     ],
     methods: [
         'toString' => function ($self) {
-            return "[{$self->__prototypeName}]";
+            $name = $self->__prototypeName ?? 'Object';
+            return "[{$name}]";
         }
     ]
 );
