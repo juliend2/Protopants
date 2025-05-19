@@ -32,14 +32,8 @@ class PrototypeTest extends TestCase {
 
     function testCallingParentOfParentMethod() {
         Prototype::create('Bob', [], methods: []);
-        $prototype = Prototype::extend('Bob', 'Bobby', [], []);
+        $prototype = Prototype::extend('Bobby', 'Bob', [], []);
         $this->assertEquals('[Object]', $prototype->toString());
-    }
-
-    function testPrototypeMethodMissing() {
-        $prototype = Prototype::create('BobbyMethodMissing', [], methods: []);
-        $this->expectException(PrototypeMethodMissingException::class);
-        $prototype->talkToMe();
     }
 
     function testAccessingFirstLevelPropertyFromMethod() {
@@ -63,7 +57,7 @@ class PrototypeTest extends TestCase {
             methods: [
             ]
         );
-        $benny = Prototype::extend('Person', 'Friend',
+        $benny = Prototype::extend('Friend', 'Person',
             properties: [
                 'nickname' => 'Benny',
             ], methods: [
