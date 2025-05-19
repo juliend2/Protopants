@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/autorun.php';
+namespace Protopants;
 
 class Prototype {
     public static $__prototypesRegistry = [];
@@ -104,3 +104,13 @@ class Prototype {
         return $this->parentPrototype->{$propertyName};
     }
 }
+
+Prototype::create('Object',
+    properties: [
+    ],
+    methods: [
+        'toString' => function ($self) {
+            return "[{$self->__prototypeName}]";
+        }
+    ]
+);

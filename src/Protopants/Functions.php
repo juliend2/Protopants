@@ -1,5 +1,10 @@
 <?php
 
+namespace Protopants;
+
+use Protopants\Prototype;
+use Protopants\SubPrototype;
+
 function setMethod(string $prototypeName, string $methodName, callable $methodBody) {
   $prototype = Prototype::get($prototypeName);
   $prototype->setSingleMethod([$methodName => $methodBody]);

@@ -1,5 +1,7 @@
 <?php
 
+namespace Protopants;
+
 class SubPrototype extends Prototype {
     public function __construct($properties, $methods) {
         $this->properties = array_merge($this->properties, $properties);

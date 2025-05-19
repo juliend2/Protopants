@@ -1,9 +1,10 @@
 <?php
 
 require __DIR__.'/../vendor/autoload.php';
-require_once __DIR__.'/../src/PrototypeMethodMissingException.php';
-require_once __DIR__.'/../main.php';
 
+use Protopants\Prototype;
+use Protopants\PrototypeMethodMissingExceptionTest;
+use function Protopants\create;
 use PHPUnit\Framework\TestCase;
 
 class PrototypeTest extends TestCase {
