@@ -19,9 +19,7 @@ class Prototype {
 
     public static function create($prototypeName, array $properties, array $methods) {
         $parentPrototypeName = $prototypeName === 'Object' ? null : 'Object';
-        // $parent = Prototype::get($parentPrototypeName);
         static::$__prototypesRegistry[$prototypeName] = static::extend($prototypeName, $parentPrototypeName, $properties, $methods);
-        // static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parent);
         return static::$__prototypesRegistry[$prototypeName];
     }
 
