@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 
 class PrototypeTest extends TestCase {
     function testPrototypeName() {
+        $object = create('Object');
+        $this->assertEquals('[Object]', $object->toString());
+
         $prototype = Prototype::create('Human', properties: [], methods: []);
         $this->assertEquals('Human', $prototype->__prototypeName);
     }
