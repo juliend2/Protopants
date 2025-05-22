@@ -18,3 +18,9 @@ function create(string $prototypeName, array $initialParams = []) {
   return $cloned;
 }
 
+function __slidingPairs(array $arr): \Generator {
+    for ($i = 0; $i < count($arr) - 1; $i++) {
+        yield [$arr[$i], $arr[$i + 1], array_key_last($arr) == $i + 1];
+    }
+}
+

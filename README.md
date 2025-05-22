@@ -10,7 +10,7 @@ Prototype-based programming for the PHP fancy pants.
 ## TODO
 
 - [x] Invert first 2 params of Prototype::extend()
-- [ ] Implement mixins/multiple inheritance
+- [x] Implement mixins/multiple inheritance
 - [ ] Implement method overloading, maybe by using several with... named arguments like smalltalk does
 - [ ] Maybe add a way to call methods on non-object values, such as integers.
   Through a function.

@@ -2,6 +2,8 @@
 
 namespace Protopants;
 
+use function Protopants\__slidingPairs;
+
 class Prototype {
     public static $__prototypesRegistry = [];
 
@@ -29,6 +31,45 @@ class Prototype {
         static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
         static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
         return static::$__prototypesRegistry[$prototypeName];
+    }
+
+    /**
+     * Given an input: a, b, c, d
+     * It will return a prototype that has the following structure of prototypes:
+     * a:
+     *  parentPrototype: b
+     *   parentPrototype: c
+     *    parentPrototype: d
+     *     parentPrototype: Object <-- 'Object' is always the parent-most prototype.
+     */
+    public static function mixin($prototypeName, array $otherPrototypeNames): static|null {
+        // Prepare input array:
+        $propNames = $otherPrototypeNames;
+        array_unshift($propNames, $prototypeName);
+        $slidingPairs = __slidingPairs(
+            // Reversed array so we it mimicks the way array_merge() works, where
+            // it has the last element have the least precedence:
+            array_reverse($propNames)
+        );
+
+        $lastProtoName = null;
+        foreach ($slidingPairs as [$a, $b, $is_last]) {
+            $createdProtoName = $is_last ? $b : ($b.'_With_'.$a);
+            $rightMostProto = static::get($a);
+            $extendProto = static::get($lastProtoName ?? $a);
+            $createdProto = static::create($createdProtoName,
+                properties: $rightMostProto->getProperties(),
+                methods: $rightMostProto->getMethods(),
+            );
+            if (!is_null($lastProtoName)) { // So it's the first iteration...
+                $createdProto->setParentPrototype($extendProto);
+            }
+            $lastProtoName = $createdProtoName;
+            if ($is_last) {
+                return $createdProto;
+            }
+        }
+        return null;
     }
 
     public function setName($prototypeName) {
@@ -78,6 +119,14 @@ class Prototype {
         }
 
         return $method($this, ...$arguments);
+    }
+
+    public function getProperties() {
+        return $this->properties;
+    }
+
+    public function getMethods() {
+        return $this->methods;
     }
 
     /**
