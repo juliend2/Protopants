@@ -3,6 +3,7 @@
 namespace Protopants;
 
 use function Protopants\__slidingPairs;
+use Protopants\PrototypeNotFoundException;
 
 class Prototype {
     public static $__prototypesRegistry = [];
@@ -12,25 +13,35 @@ class Prototype {
     protected $properties = [];
     protected $methods = [];
 
-    public static function get($prototypeName): static|null {
+    public static function get($prototypeName): static {
         if (isset(static::$__prototypesRegistry[$prototypeName])) {
             return static::$__prototypesRegistry[$prototypeName];
         }
-        return null;
+        throw new PrototypeNotFoundException();
     }
 
     public static function create($prototypeName, array $properties = [], array $methods = []) {
+        // The default parent prototype is always "Object":
         $parentPrototypeName = $prototypeName === 'Object' ? null : 'Object';
+        // If we're creating the "Object" (whose parent is `null`), it's a special case:
+        if (is_null($parentPrototypeName)) {
+            return static::factory('Object', $properties, $methods);
+        }
         static::$__prototypesRegistry[$prototypeName] = static::extend($prototypeName, $parentPrototypeName, $properties, $methods);
+        return static::$__prototypesRegistry[$prototypeName];
+    }
+
+    public static function factory($prototypeName, $properties, $methods) {
+        static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
+        static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
         return static::$__prototypesRegistry[$prototypeName];
     }
 
     public static function extend(string $prototypeName, string|null $parentPrototypeName, array $properties = [], array $methods = []) {
         $parentPrototype = Prototype::get($parentPrototypeName ?? 'Object');
-        static::$__prototypesRegistry[$prototypeName] = new Prototype($properties, $methods);
-        static::$__prototypesRegistry[$prototypeName]->setParentPrototype($parentPrototype);
-        static::$__prototypesRegistry[$prototypeName]->setName($prototypeName);
-        return static::$__prototypesRegistry[$prototypeName];
+        $proto = static::factory($prototypeName, $properties, $methods);
+        $proto->setParentPrototype($parentPrototype);
+        return $proto;
     }
 
     /**
@@ -72,10 +83,6 @@ class Prototype {
         return null;
     }
 
-    public function setName($prototypeName) {
-        $this->__prototypeName = $prototypeName;
-    }
-
     public function __construct($properties, $methods) {
         $this->properties = $properties;
         $this->methods['methodMissing'] = function ($self, $methodName, $arguments) {
@@ -89,6 +96,10 @@ class Prototype {
             throw new PrototypeMethodMissingException("Method Missing: ".$methodName);
         };
         $this->methods = array_merge($this->methods, $methods);
+    }
+
+    public function setName($prototypeName) {
+        $this->__prototypeName = $prototypeName;
     }
 
     public function setParentPrototype(Prototype|null $parentPrototype) {
